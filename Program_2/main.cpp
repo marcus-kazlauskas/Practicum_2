@@ -16,15 +16,15 @@ using namespace std;
 int main(int argc, const char * argv[]) {
     // insert code here...
     
-    int elCount = 10;
-    double xInit = 0;
-    double xEnd = 1;
-    double tInit = 0;
-    double tEnd = 1;
-    double e = 0.01;
-    double hx = (xEnd-xInit)/(elCount);
+    int elCount = 10;                                   // количество точек разбиения отрезка
+    double xInit = 0;                                   // начало отрезка
+    double xEnd = 1;                                    // конец отрезка
+    double tInit = 0;                                   // начальное время
+    double tEnd = 1;                                    // конечное время
+    double e = 0.001;                                   // погрешность
+    double hx = (xEnd-xInit)/(elCount);                 // шаг вычислений по x
     double hxConst = hx;
-    double ht = (tEnd-tInit)/(elCount);
+    double ht = (tEnd-tInit)/(elCount);                 // шаг вычислений по t; при ht = hx выполняется признак устойчивочти ht <= 2*hx
 //    double htConst = ht;
     int numh = 1; //full elCounth = elCount*numh
     int numt = 1; //full elCountt = elCount*numt
@@ -36,16 +36,16 @@ int main(int argc, const char * argv[]) {
 //    double u2h[elCount+1];
     
     for (int i = 0; i <= elCount; i++){
-        u[i] = sol(xInit+hx*i, tEnd);
+        u[i] = sol(xInit+hx*i, tEnd);                   // след аналитического решения
         u2[i] = 0;
         u1Short[i] = 1;
     }
     
 //    cout << psi(tInit+ht*1)+hx*(cos(0)-2*psi1(tInit+ht*1))+pow(ht, 2)/2*(psi2(tInit+ht*1)) << endl;
     
-    while (norm1(u2, u1Short, elCount, numh)/(pow(2, 2)-1) > e){
-        hx /= 2;
-        ht /= 2;
+    while (norm1(u2, u1Short, elCount, numh)/(pow(2, 2)-1) > e){        // численное решение, норма делится на 2^2-1,
+        hx /= 2;                                                        // потому что сетка удваивается каждую итерацию,
+        ht /= 2;                                                        // а разностная схема обеспечивает 2-й порядок аппроксимации
         numh *= 2;
         numt *= 2;
 
@@ -57,21 +57,21 @@ int main(int argc, const char * argv[]) {
         u1Short = new double[elCount*numh+1];
         u2 = new double[elCount*numh+1];
         
-        cout << numh*2 << " " << hx/2 << endl;
+        cout << numh*2 << " " << hx/2 << endl;                          // величина дополнительного разбиения отрезка (помимо изначальный 10 частей)
         
-        for (int l = 0; l <= elCount*numh; l++){
+        for (int l = 0; l <= elCount*numh; l++){                        // след ф-ции при t=0, u(x,0)=fi(x), 0 <= x <= 1
             u2[l] = fi(xInit+hx*l);
         }
         
-        for (int l = 0; l <= elCount*numh*2; l++){
+        for (int l = 0; l <= elCount*numh*2; l++){                      // след ф-ции при t=0 на удвоенной сетке
             u1[l] = fi(xInit+hx/2*l);
         }
 
-        difSch(u2, hx, ht, numh, numt, xInit, tInit, elCount);
-        difSch(u1, hx/2, ht/2, numh*2, numt*2, xInit, tInit, elCount);
+        difSch(u2, hx, ht, numh, numt, xInit, tInit, elCount);          // вычисление следа u(x,t) с помощью разностной схемы, аппроксимирующей задачу
+        difSch(u1, hx/2, ht/2, numh*2, numt*2, xInit, tInit, elCount);  // то же самое на удвоенной одновременно и по x и по t сетке
         
         for (int i = 0; i <= elCount*numh; i++){
-            u1Short[i] = u1[i*2];
+            u1Short[i] = u1[i*2];                                       // каждое второе значение ф-ции выкидывается, чтобы потом считать погрешность
         }
         
 //        for (int i = 0; i <= elCount*num; i++){
@@ -84,7 +84,7 @@ int main(int argc, const char * argv[]) {
     
     for (int i = 0; i <= elCount; i++){
         cout << xInit+hxConst*i << " " << u[i] << " " << u1Short[i*numh] << " " << fabs(u[i]-u2[i*numh]) << " " << fabs(u[i]-u1Short[i*numh]) <<  endl;
-    }
+    }   // вывод: x; аналитическое решение u(x,1); численное решение u(x,1); погрешность предпосленей итерации; погрешность итогового решения
     
     return 0;
 }
